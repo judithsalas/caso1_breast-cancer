@@ -11,6 +11,13 @@ Aprendizaje Automático (UAX).
 - Guía del caso: [`breastdcedl/GUIA.md`](breastdcedl/GUIA.md)
 - Decisiones, hoja de ruta y estado del trabajo: [`docs/REGISTRO.md`](docs/REGISTRO.md)
 
+## Arquitectura actual: cnn_v1
+
+![Diagrama de bloques de cnn_v1](docs/figuras/cnn_v1.svg)
+
+Decisiones de diseño y su justificación: [`docs/REGISTRO.md`](docs/REGISTRO.md) (D10).
+El diagrama se genera desde el código: `python -m src.models.dibujar cnn_v1`.
+
 ## Estructura
 
 ```
@@ -140,6 +147,7 @@ parcial (`descargar_datos.py --pacientes 100` basta).
 ```bash
 # 1. Comprobar la arquitectura sin entrenar: forma de cada capa y parámetros
 python -m src.models.comprobar cnn_v1
+python -m src.models.dibujar cnn_v1      # diagrama de bloques en docs/figuras/
 
 # 2. Prueba de humo (1-2 minutos): que todo funciona
 python -m src.training.entrenar --modo rapido --modelo cnn_v1
