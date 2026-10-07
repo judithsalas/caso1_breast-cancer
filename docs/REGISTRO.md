@@ -145,6 +145,7 @@ versión es una lista de decisiones en `src/models/versiones.py`.
 | **Total** | **23.761 parámetros** | |
 
 Tamaños: 3@256² → 16@128² → 32@64² → 64@32² → 64 → 1.
+Diagrama: [`docs/figuras/cnn_v1.svg`](figuras/cnn_v1.svg) (generado con `python -m src.models.dibujar cnn_v1`).
 Consecuencia a vigilar: con 3 bloques cada punto del mapa final ve ~22×22 píxeles de 256×256;
 la red detecta patrones locales de realce, no la forma global del tumor. Si se queda corta, una
 versión con 4 bloques es la comparación natural.
