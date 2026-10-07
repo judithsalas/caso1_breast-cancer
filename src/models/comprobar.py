@@ -10,7 +10,7 @@ import sys
 import torch
 from torch import nn
 
-from src.models import MODELOS, contar_parametros, crear_modelo
+from src.models import VERSIONES, contar_parametros, crear_modelo
 
 
 def resumen(modelo: nn.Module, tamano_lote: int = 2) -> torch.Tensor:
@@ -44,7 +44,7 @@ def resumen(modelo: nn.Module, tamano_lote: int = 2) -> torch.Tensor:
 
 def main() -> None:
     nombre = sys.argv[1] if len(sys.argv) > 1 else "cnn_v1"
-    print(f"Modelos registrados: {sorted(MODELOS)}\n")
+    print(f"Versiones disponibles: {sorted(VERSIONES)}\n")
     modelo = crear_modelo(nombre)
     salida = resumen(modelo)
     if tuple(salida.shape) != (2, 1):

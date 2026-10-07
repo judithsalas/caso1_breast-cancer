@@ -18,9 +18,10 @@ F1 (auditoría de datos) aplazada, ver D7.
 - Tubería de entrenamiento (`src/training/entrenar.py`), plantilla de la primera red
   (`src/models/cnn_v1.py`) y comprobador de arquitecturas (`src/models/comprobar.py`). Probado
   de principio a fin con imágenes reales y una red provisional (no subida).
+- **cnn_v1 diseñada** (D10): 23.761 parámetros. Probada en modo rápido en CPU: ~12 s por época
+  con 500 cortes, así que una época completa (~11.000 cortes) tardaría ~5 min en CPU.
 
 **Siguiente**
-- Judith: diseñar `cnn_v1` y comprobarla con `python -m src.models.comprobar cnn_v1`.
 - PC Universidad: puesta en marcha según `docs/PUESTA_EN_MARCHA_UNI.md`.
 - En clase: `rapido` con `cnn_v1` y después `completo` con pérdida normal y ponderada.
 - F1 (auditoría de datos) antes de sacar conclusiones de ningún resultado.
@@ -127,6 +128,26 @@ Pendientes de revisar por Judith; cada una se puede cambiar.
   entorno para que solo use lo suyo y sea reproducible. Igual en la universidad.
 - En el portátil se instaló Miniconda (no Miniforge); los dos sirven igual. Al crear el entorno
   hubo que aceptar los términos de uso de los canales de Anaconda.
+
+### D10 · Primera arquitectura: cnn_v1 (2026-10-07)
+Diseñada por Judith. Para poder iterar, la CNN es configurable (`src/models/cnn.py`) y cada
+versión es una lista de decisiones en `src/models/versiones.py`.
+
+| Decisión | cnn_v1 | Por qué |
+|---|---|---|
+| Bloques | 3 | La guía recomienda empezar con 3–4; red simple |
+| Filtros | 16 → 32 → 64 | Pocos: red pequeña para pocos datos (~880 pacientes); término medio entre 8→16→32 y 32→64→128 |
+| Kernel / padding / convs | 3×3, padding 1, 1 conv por bloque | Estándar y lo más simple; solo el pooling reduce el tamaño |
+| Pooling | MaxPool 2×2 | Se queda con la respuesta más fuerte de cada zona |
+| BatchNorm | Sí, tras cada conv (sin sesgo en la conv) | Entrenamiento más estable |
+| De mapas a vector | Pooling global | 64 valores en vez de 65.536: muchos menos parámetros y menos sobreajuste |
+| Cabeza | Linear(64 → 1), sin dropout | Con pooling global la cabeza ya es mínima (65 parámetros) |
+| **Total** | **23.761 parámetros** | |
+
+Tamaños: 3@256² → 16@128² → 32@64² → 64@32² → 64 → 1.
+Consecuencia a vigilar: con 3 bloques cada punto del mapa final ve ~22×22 píxeles de 256×256;
+la red detecta patrones locales de realce, no la forma global del tumor. Si se queda corta, una
+versión con 4 bloques es la comparación natural.
 
 ---
 

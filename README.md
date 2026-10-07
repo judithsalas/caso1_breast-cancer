@@ -19,7 +19,7 @@ Aprendizaje Automático (UAX).
 ├── src/
 │   ├── config.py     modos de ejecución `rapido` y `completo`
 │   ├── data/         acceso a los datos y a utils_caso.py
-│   ├── models/       arquitecturas de la CNN
+│   ├── models/       CNN configurable (cnn.py) y sus versiones (versiones.py)
 │   ├── training/     entrenamiento y evaluación por paciente
 │   └── utils/        dispositivo (CPU / ROCm / CUDA), semilla
 ├── notebooks/        auditoría y visualización de datos
@@ -157,8 +157,11 @@ Cada ejecución deja en `runs/<fecha>_<modelo>_<modo>/` (no se versiona) los pes
 época (`mejor.pt`), las métricas por época (`historial.csv`) y todo junto con la configuración,
 la máquina, los tiempos y la memoria (`resultados.json`).
 
-Para añadir una arquitectura nueva: copiar `src/models/cnn_v1.py` a `cnn_v2.py`, cambiar el
-nombre en `@registrar("cnn_v2")` y añadir su import al final de `src/models/__init__.py`.
+Las arquitecturas se declaran en [`src/models/versiones.py`](src/models/versiones.py): cada
+versión (`cnn_v1`, `cnn_v2`...) es una lista de decisiones (filtros por bloque, kernel,
+convoluciones por bloque, pooling, BatchNorm, resumen global o flatten, cabeza, dropout) para la
+CNN configurable de [`src/models/cnn.py`](src/models/cnn.py). Para probar una idea nueva se añade
+una versión cambiando solo lo que se quiere comparar; las versiones ya entrenadas no se tocan.
 
 ## Licencias y atribución
 
