@@ -21,6 +21,9 @@ F1 (auditoría de datos) aplazada, ver D7.
 - **cnn_v1 diseñada** (D10): 23.761 parámetros. Probada en modo rápido en CPU: ~12 s por época
   con 500 cortes, así que una época completa (~11.000 cortes) tardaría ~5 min en CPU.
 
+- **Primer entrenamiento completo de cnn_v1** en el PC de la universidad (R1): funciona en la GPU
+  (ROCm), 27 s por época. AUC por paciente máximo 0,585; prácticamente al nivel del azar.
+
 **Siguiente**
 - PC Universidad: puesta en marcha según `docs/PUESTA_EN_MARCHA_UNI.md`.
 - En clase: `rapido` con `cnn_v1` y después `completo` con pérdida normal y ponderada.
@@ -149,6 +152,26 @@ Diagrama: [`docs/figuras/cnn_v1.svg`](figuras/cnn_v1.svg) (generado con `python 
 Consecuencia a vigilar: con 3 bloques cada punto del mapa final ve ~22×22 píxeles de 256×256;
 la red detecta patrones locales de realce, no la forma global del tumor. Si se queda corta, una
 versión con 4 bloques es la comparación natural.
+
+---
+
+## Resultados
+
+Métricas por paciente en validación (fold 0: 219 pacientes, 64 con pCR), agregación por media,
+umbral 0,5. Los detalles de cada ejecución están en su `runs/<ejecución>/resultados.json`
+(no versionado).
+
+### R1 · cnn_v1, pérdida normal (2026-10-07, PC Universidad)
+- Ejecución `20261007-211625_cnn_v1_completo`. RX 6700 XT con ROCm 7.14, batch 32, 27 s por
+  época (la primera 33 s). Paró en la época 20 (paciencia 10).
+- **Mejor AUC 0,585 (época 10)**; el resto de épocas, entre 0,51 y 0,58.
+- Sensibilidad casi siempre 0 con umbral 0,5: la red predice "no pCR" para casi todas.
+- Pérdida de entrenamiento: de 0,603 a 0,524. La de validación sube desde la época 3 (de 0,60
+  a 0,65–0,81): empieza a memorizar el entrenamiento sin generalizar.
+- Referencia: 0,60 es la pérdida de predecir siempre la proporción de pCR (29 %). La red
+  empieza exactamente ahí y apenas aprende.
+- **Lectura:** cnn_v1 no encuentra señal útil (AUC ≈ azar). Con 219 pacientes, diferencias de
+  AUC de ±0,04 son ruido, así que el "mejor" 0,585 no es distinto de las demás épocas.
 
 ---
 
