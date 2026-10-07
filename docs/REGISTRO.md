@@ -7,20 +7,26 @@ Se actualiza en cada sesión de trabajo. Servirá de base para el informe y las 
 
 ## Estado actual
 
-**Fase actual:** F0 · Configuración del proyecto y de las dos máquinas.
+**Fase actual:** F2 (tubería de entrenamiento) hecha · F3 (primera red de Judith) en curso.
+F1 (auditoría de datos) aplazada, ver D7.
 
 **Hecho**
-- Repositorio con estructura de proyecto, material del profesor (sin imágenes), entorno
-  compartido, modos `rapido`/`completo`, detección de dispositivo, tests y CI.
+- Repositorio con estructura, material del profesor (sin imágenes), entorno compartido, modos
+  `rapido`/`completo`, detección de dispositivo, tests y CI.
+- Portátil configurado (2026-10-07): Miniconda, entorno `cancer` con Python 3.12.15, torch
+  2.14.0+cpu, 5 pacientes descargadas, 11 tests OK. Entorno aislado con `PYTHONNOUSERSITE=1`.
+- Tubería de entrenamiento (`src/training/entrenar.py`), plantilla de la primera red
+  (`src/models/cnn_v1.py`) y comprobador de arquitecturas (`src/models/comprobar.py`). Probado
+  de principio a fin con imágenes reales y una red provisional (no subida).
 
 **Siguiente**
-- Portátil: clonar, crear entorno, instalar PyTorch CPU, descargar imágenes, `pytest -q`.
-- PC Universidad: comprobar versión de torch instalada (¿2.14.0?), `pip install -r requirements.txt`,
-  fijar `HSA_OVERRIDE_GFX_VERSION` en el entorno, `python -m src.utils.dispositivo`.
-- Empezar F1 (auditoría de datos).
+- Judith: diseñar `cnn_v1` y comprobarla con `python -m src.models.comprobar cnn_v1`.
+- PC Universidad: puesta en marcha según `docs/PUESTA_EN_MARCHA_UNI.md`.
+- En clase: `rapido` con `cnn_v1` y después `completo` con pérdida normal y ponderada.
+- F1 (auditoría de datos) antes de sacar conclusiones de ningún resultado.
 
 **Queda**
-- F1 a F9 de la hoja de ruta.
+- F1, F3 a F9 de la hoja de ruta.
 
 ---
 
@@ -30,10 +36,10 @@ Basada en el plan de trabajo del enunciado (§13) y la guía, con fases añadida
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| F0 | Configuración: repo, entorno en las dos máquinas, descarga de datos | en curso |
-| F1 | **Auditoría y visualización de datos** (añadida): pacientes, clases, cohortes, canales, rangos, ejemplos PRE/EARLY/LATE y realce, comprobación PRE < EARLY | pendiente |
-| F2 | Tubería de entrenamiento: Dataset/DataLoader, bucle de entrenamiento, modos, evaluación por paciente, registro automático de cada ejecución (config, máquina, tiempos, métricas) | pendiente |
-| F3 | **Diseño de la CNN (Judith)** e iteración: baselines, pérdida normal vs ponderada (`pos_weight`), sobreajuste, descartar redes que no mejoren en 5–10 épocas | pendiente |
+| F0 | Configuración: repo, entorno en las dos máquinas, descarga de datos | portátil hecho · uni pendiente |
+| F1 | **Auditoría y visualización de datos** (añadida): pacientes, clases, cohortes, canales, rangos, ejemplos PRE/EARLY/LATE y realce, comprobación PRE < EARLY | aplazada (D7) |
+| F2 | Tubería de entrenamiento: Dataset/DataLoader, bucle de entrenamiento, modos, evaluación por paciente, registro automático de cada ejecución (config, máquina, tiempos, métricas) | hecho |
+| F3 | **Diseño de la CNN (Judith)** e iteración: baselines, pérdida normal vs ponderada (`pos_weight`), sobreajuste, descartar redes que no mejoren en 5–10 épocas | en curso |
 | F4 | Cerrar el modelo con validación interna: validación cruzada por paciente, método de agregación y umbral (nunca con test) | pendiente |
 | F5 | Evaluación final en test, **una sola vez**: métricas por paciente y matriz de confusión. Dibujo de la red. Pesos en `models/final/` | pendiente |
 | F6 | Informe: decisiones, métricas, matriz de confusión, limitaciones, uso de GPU, preguntas de discusión | pendiente |
@@ -92,6 +98,35 @@ Formato: qué se decide, por qué y alternativas descartadas.
 
 ### D6 · Solo se versionan los pesos del modelo final (2026-10-07)
 - `models/final/*.pt` se sube a GitHub (pocos MB); el resto de checkpoints, no.
+
+### D7 · Aplazar la auditoría de datos (F1) para probar una primera red en clase (2026-10-07)
+- Se adelanta la tubería de entrenamiento (F2) y la primera red (F3) para aprovechar la GPU de
+  la clase.
+- **Condición:** F1 se hace antes de sacar conclusiones de cualquier resultado. Los primeros
+  entrenamientos sirven para comprobar que todo funciona y como referencia, no para decidir.
+
+### D8 · Decisiones provisionales de la tubería de entrenamiento (2026-10-07)
+Pendientes de revisar por Judith; cada una se puede cambiar.
+- **Entrada:** el tensor (3, 256, 256) en [0, 1] tal como lo da `utils_caso` (PNG / 255), sin
+  más normalización. La app deberá usar exactamente lo mismo.
+- **Sin aumento de datos** por ahora: es una decisión a tomar en F3 (siempre sobre el tensor
+  completo, nunca canal a canal).
+- **Optimizador Adam**, lr 1e-3 (valor por defecto razonable para empezar).
+- **Métrica de selección y de parada:** AUC por paciente en validación, porque no depende del
+  umbral y no la engaña el desbalance como la accuracy.
+- **Agregación por paciente:** media de probabilidades; **umbral 0,5**. Ambos provisionales: se
+  eligen en F4 con validación interna.
+- **Pérdida:** normal por defecto; `--ponderada` usa `pos_weight = N0/N1` calculado sobre las
+  filas de entrenamiento (2,40 con todos los datos del fold 0).
+- **Modo rápido:** usa solo pacientes ya descargadas, para poder probar con una descarga parcial.
+  Sus métricas no significan nada (p. ej. 10 pacientes de validación con 1 pCR).
+
+### D9 · Entorno aislado de paquetes externos (2026-10-07)
+- En el portátil, pip encontró paquetes en la carpeta de usuario de Python
+  (`AppData\Roaming\Python`) y no los instaló en el entorno. Se fija `PYTHONNOUSERSITE=1` en el
+  entorno para que solo use lo suyo y sea reproducible. Igual en la universidad.
+- En el portátil se instaló Miniconda (no Miniforge); los dos sirven igual. Al crear el entorno
+  hubo que aceptar los términos de uso de los canales de Anaconda.
 
 ---
 
