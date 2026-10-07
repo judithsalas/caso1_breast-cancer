@@ -18,7 +18,9 @@ Fuentes de verdad, por orden:
 ## Reglas de trabajo con Judith (obligatorias)
 
 - **La arquitectura de la CNN la diseña Judith.** Claude ayuda, explica y, cuando haya una red
-  definitiva, la dibuja. No propone una arquitectura "hecha" para que la copie.
+  definitiva, la dibuja. No propone una arquitectura "hecha" para que la copie. Judith decide
+  los valores; Claude puede escribir el código a partir de sus decisiones. Las versiones viven
+  en `src/models/versiones.py` (una por idea, las ya entrenadas no se modifican).
 - **Ninguna decisión sin explicarla y sin su aprobación.** Antes de subir algo a GitHub, se
   explica qué se ha hecho y por qué.
 - **Ser objetivo:** si algo no se puede hacer, está mal o contradice los documentos, decirlo

@@ -34,7 +34,7 @@ from torch.utils.data import DataLoader
 
 from src.config import Config, obtener_config
 from src.data import RAIZ_DATOS, RAIZ_REPO, uc
-from src.models import contar_parametros, crear_modelo
+from src.models import VERSIONES, contar_parametros, crear_modelo
 from src.utils.dispositivo import describir_dispositivo, elegir_dispositivo
 from src.utils.semilla import fijar_semilla
 
@@ -141,8 +141,8 @@ def entrenar_modelo(modelo, cargador_tr, cargador_va, valida, criterio, optimiza
         mejora = not math.isnan(auc) and auc > mejor_auc
         if mejora:
             mejor_auc, sin_mejora = auc, 0
-            torch.save({"modelo": resultados["modelo"], "estado": modelo.state_dict(),
-                        "epoca": epoca, "auc_val": auc, "config": cfg.como_dict()},
+            torch.save({"modelo": resultados["modelo"], "arquitectura": resultados.get("arquitectura"),
+                        "estado": modelo.state_dict(), "epoca": epoca, "auc_val": auc, "config": cfg.como_dict()},
                        carpeta / "mejor.pt")
         else:
             sin_mejora += 1
@@ -230,6 +230,7 @@ def main() -> None:
     resultados = {
         "ejecucion": nombre,
         "modelo": args.modelo,
+        "arquitectura": VERSIONES[args.modelo],
         "parametros": contar_parametros(modelo),
         "perdida": "ponderada" if args.ponderada else "normal",
         "pos_weight": peso_positivos,
