@@ -216,3 +216,35 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+### Específico de este proyecto ###
+
+# Imágenes del dataset: ~38.000 PNG, se descargan con breastdcedl/descargar_datos.py
+breastdcedl/dataset/
+
+# Pesos y checkpoints: no se versionan salvo el modelo final.
+# Para subir el modelo final: guardarlo en models/final/ (excepción de abajo).
+models/**
+!models/**/
+!models/**/.gitkeep
+!models/final/**
+*.ckpt
+*.pt
+*.pth
+!models/final/*.pt
+*.onnx
+*.pkl
+*.joblib
+
+# Resultados de cada ejecución (métricas, logs, curvas): se generan en local.
+# Los que vayan al informe se copiarán a docs/ a propósito.
+runs/
+logs/
+outputs/
+wandb/
+mlruns/
+
+# Sistema operativo y editor
+.DS_Store
+Thumbs.db
+desktop.ini
