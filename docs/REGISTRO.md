@@ -24,6 +24,7 @@ F1 (auditoría de datos) aplazada, ver D7.
 - **Primer entrenamiento completo de cnn_v1** en el PC de la universidad (R1): funciona en la GPU
   (ROCm), 27 s por época. AUC por paciente máximo 0,585; prácticamente al nivel del azar.
 - **cnn_v1 con pérdida ponderada** (R2): AUC máximo 0,572. Igual que R1: **cnn_v1 descartada**.
+- **cnn_v2 definida** (D11): cnn_v1 + un cuarto bloque de 128 filtros; 97.809 parámetros.
 
 **Siguiente**
 - PC Universidad: puesta en marcha según `docs/PUESTA_EN_MARCHA_UNI.md`.
@@ -153,6 +154,15 @@ Diagrama: [`docs/figuras/cnn_v1.svg`](figuras/cnn_v1.svg) (generado con `python 
 Consecuencia a vigilar: con 3 bloques cada punto del mapa final ve ~22×22 píxeles de 256×256;
 la red detecta patrones locales de realce, no la forma global del tumor. Si se queda corta, una
 versión con 4 bloques es la comparación natural.
+
+### D11 · Segunda arquitectura: cnn_v2 (2026-10-07)
+- Elegida por Judith entre tres opciones (4 bloques, 5 bloques, 2 convoluciones por bloque).
+- **Único cambio respecto a cnn_v1:** un cuarto bloque de 128 filtros (16 → 32 → 64 → 128).
+- **Hipótesis que pone a prueba:** cnn_v1 no aprendía porque cada punto de su mapa final veía
+  solo ~22×22 píxeles. Con 4 bloques el mapa final es 16×16 y cada punto ve ~46×46 píxeles.
+- 97.809 parámetros (4 veces cnn_v1, aún pequeña; la red de referencia del profesor tiene
+  ~105.000). Diagrama: [`docs/figuras/cnn_v2.svg`](figuras/cnn_v2.svg).
+- Se entrena igual que cnn_v1 (pérdida normal y ponderada) para poder comparar.
 
 ---
 

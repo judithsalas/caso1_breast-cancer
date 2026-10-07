@@ -33,4 +33,21 @@ VERSIONES: dict[str, dict] = {
         "cabeza_oculta": None,
         "dropout": 0.0,
     },
+    # ---------------------------------------------------------------------- #
+    # cnn_v2 · un bloque más (2026-10-07)
+    # ---------------------------------------------------------------------- #
+    # cnn_v1 quedó al nivel del azar (R1, R2) y su pérdida de entrenamiento apenas
+    # bajaba. Hipótesis: con 3 bloques cada punto del mapa final ve solo ~22x22
+    # píxeles. ÚNICO cambio respecto a cnn_v1: un cuarto bloque de 128 filtros
+    # (mapa final 16x16, cada punto ve ~46x46 píxeles). Todo lo demás, igual.
+    "cnn_v2": {
+        "filtros": (16, 32, 64, 128),
+        "kernel": 3,
+        "convs_por_bloque": 1,
+        "pooling": "max",
+        "batchnorm": True,
+        "resumen": "global",
+        "cabeza_oculta": None,
+        "dropout": 0.0,
+    },
 }
