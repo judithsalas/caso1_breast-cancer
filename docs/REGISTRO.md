@@ -23,6 +23,7 @@ F1 (auditoría de datos) aplazada, ver D7.
 
 - **Primer entrenamiento completo de cnn_v1** en el PC de la universidad (R1): funciona en la GPU
   (ROCm), 27 s por época. AUC por paciente máximo 0,585; prácticamente al nivel del azar.
+- **cnn_v1 con pérdida ponderada** (R2): AUC máximo 0,572. Igual que R1: **cnn_v1 descartada**.
 
 **Siguiente**
 - PC Universidad: puesta en marcha según `docs/PUESTA_EN_MARCHA_UNI.md`.
@@ -172,6 +173,31 @@ umbral 0,5. Los detalles de cada ejecución están en su `runs/<ejecución>/resu
   empieza exactamente ahí y apenas aprende.
 - **Lectura:** cnn_v1 no encuentra señal útil (AUC ≈ azar). Con 219 pacientes, diferencias de
   AUC de ±0,04 son ruido, así que el "mejor" 0,585 no es distinto de las demás épocas.
+
+### R2 · cnn_v1, pérdida ponderada (2026-10-07, PC Universidad)
+- Ejecución `20261007-213119_cnn_v1_completo_ponderada`. `pos_weight` = 2,40, mismas condiciones
+  que R1. Paró en la época 20.
+- **Mejor AUC 0,572 (época 10)**; el resto entre 0,52 y 0,57.
+- Sensibilidad entre 0,08 y 0,78 según la época, con especificidad moviéndose al revés.
+- Pérdida de entrenamiento: de 0,973 a 0,833 (0,98 es la de un predictor constante con esta
+  ponderación). La de validación sube desde la época 3 (de 0,97 a 1,09).
+
+### Comparación R1 vs R2 (lo que pide el enunciado)
+| | Normal (R1) | Ponderada (R2) |
+|---|---|---|
+| Mejor AUC | 0,585 | 0,572 |
+| Sensibilidad (umbral 0,5) | casi siempre 0 | 0,08–0,78, muy inestable |
+| Especificidad (umbral 0,5) | casi siempre 1 | 0,26–0,94 |
+
+- **Por qué:** con pérdida normal y 70 % de negativos, a la red le sale a cuenta dar
+  probabilidades bajas a todos, así que con umbral 0,5 nunca predice pCR (sensibilidad 0). La
+  ponderada multiplica por 2,40 el coste de fallar un positivo: las probabilidades suben y
+  ahora caen a ambos lados de 0,5, y la sensibilidad aparece.
+- Pero **el AUC no cambia**: la ponderación desplaza el punto de corte, no la capacidad de
+  ordenar a las pacientes. Si la red no distingue (AUC ≈ 0,55), ninguna pérdida lo arregla.
+- La inestabilidad de la sensibilidad entre épocas indica que las probabilidades se agrupan
+  cerca de 0,5: pequeños cambios de la red mueven a muchas pacientes de un lado a otro.
+- **Decisión:** cnn_v1 se descarta con ambas pérdidas (regla de 5–10 épocas sin mejora real).
 
 ---
 
