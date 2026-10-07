@@ -56,12 +56,16 @@ git clone https://github.com/judithsalas/caso1_breast-cancer.git C:\caso1
 
 ```bash
 conda env create -f environment.yml     # crea "cancer" con Python 3.12 + requirements.txt
+# Aislar el entorno de los paquetes instalados fuera de él (carpeta de usuario de Python):
+conda env config vars set PYTHONNOUSERSITE=1 -n cancer
 conda activate cancer
+pip install -r requirements.txt         # reinstala dentro del entorno lo que pip encontró fuera
 ```
 
 Si el entorno `cancer` ya existe (PC Universidad):
 
 ```bash
+conda env config vars set PYTHONNOUSERSITE=1 -n cancer
 conda activate cancer
 pip install -r requirements.txt
 ```
@@ -127,6 +131,34 @@ Y antes de irse: `git add`, `git commit` y **`git push`**. Lo que no está en Gi
 | ¿Sus métricas cuentan? | **no** | sí |
 
 Valores provisionales, definidos en [`src/config.py`](src/config.py).
+
+El modo `rapido` usa solo pacientes ya descargadas, así que funciona con una descarga
+parcial (`descargar_datos.py --pacientes 100` basta).
+
+## Diseñar y entrenar una red
+
+```bash
+# 1. Comprobar la arquitectura sin entrenar: forma de cada capa y parámetros
+python -m src.models.comprobar cnn_v1
+
+# 2. Prueba de humo (1-2 minutos): que todo funciona
+python -m src.training.entrenar --modo rapido --modelo cnn_v1
+
+# 3. Entrenamiento real, con pérdida normal y con pérdida ponderada (el enunciado pide comparar)
+python -m src.training.entrenar --modo completo --modelo cnn_v1
+python -m src.training.entrenar --modo completo --modelo cnn_v1 --ponderada
+```
+
+Cualquier valor del modo se puede cambiar al lanzar: `--batch`, `--epocas`, `--paciencia`,
+`--lr`, `--fold`, `--pacientes`, `--workers`, `--semilla`. Con `--nota "texto"` se guarda un
+comentario junto a los resultados.
+
+Cada ejecución deja en `runs/<fecha>_<modelo>_<modo>/` (no se versiona) los pesos de la mejor
+época (`mejor.pt`), las métricas por época (`historial.csv`) y todo junto con la configuración,
+la máquina, los tiempos y la memoria (`resultados.json`).
+
+Para añadir una arquitectura nueva: copiar `src/models/cnn_v1.py` a `cnn_v2.py`, cambiar el
+nombre en `@registrar("cnn_v2")` y añadir su import al final de `src/models/__init__.py`.
 
 ## Licencias y atribución
 
