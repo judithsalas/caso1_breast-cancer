@@ -21,6 +21,11 @@ F1 (auditoría de datos) aplazada, ver D7.
 - **cnn_v1 diseñada** (D10): 23.761 parámetros. Probada en modo rápido en CPU: ~12 s por época
   con 500 cortes, así que una época completa (~11.000 cortes) tardaría ~5 min en CPU.
 
+- **Primer entrenamiento completo de cnn_v1** en el PC de la universidad (R1): funciona en la GPU
+  (ROCm), 27 s por época. AUC por paciente máximo 0,585; prácticamente al nivel del azar.
+- **cnn_v1 con pérdida ponderada** (R2): AUC máximo 0,572. Igual que R1: **cnn_v1 descartada**.
+- **cnn_v2 definida** (D11): cnn_v1 + un cuarto bloque de 128 filtros; 97.809 parámetros.
+
 **Siguiente**
 - PC Universidad: puesta en marcha según `docs/PUESTA_EN_MARCHA_UNI.md`.
 - En clase: `rapido` con `cnn_v1` y después `completo` con pérdida normal y ponderada.
@@ -149,6 +154,60 @@ Diagrama: [`docs/figuras/cnn_v1.svg`](figuras/cnn_v1.svg) (generado con `python 
 Consecuencia a vigilar: con 3 bloques cada punto del mapa final ve ~22×22 píxeles de 256×256;
 la red detecta patrones locales de realce, no la forma global del tumor. Si se queda corta, una
 versión con 4 bloques es la comparación natural.
+
+### D11 · Segunda arquitectura: cnn_v2 (2026-10-07)
+- Elegida por Judith entre tres opciones (4 bloques, 5 bloques, 2 convoluciones por bloque).
+- **Único cambio respecto a cnn_v1:** un cuarto bloque de 128 filtros (16 → 32 → 64 → 128).
+- **Hipótesis que pone a prueba:** cnn_v1 no aprendía porque cada punto de su mapa final veía
+  solo ~22×22 píxeles. Con 4 bloques el mapa final es 16×16 y cada punto ve ~46×46 píxeles.
+- 97.809 parámetros (4 veces cnn_v1, aún pequeña; la red de referencia del profesor tiene
+  ~105.000). Diagrama: [`docs/figuras/cnn_v2.svg`](figuras/cnn_v2.svg).
+- Se entrena igual que cnn_v1 (pérdida normal y ponderada) para poder comparar.
+
+---
+
+## Resultados
+
+Métricas por paciente en validación (fold 0: 219 pacientes, 64 con pCR), agregación por media,
+umbral 0,5. Los detalles de cada ejecución están en su `runs/<ejecución>/resultados.json`
+(no versionado).
+
+### R1 · cnn_v1, pérdida normal (2026-10-07, PC Universidad)
+- Ejecución `20261007-211625_cnn_v1_completo`. RX 6700 XT con ROCm 7.14, batch 32, 27 s por
+  época (la primera 33 s). Paró en la época 20 (paciencia 10).
+- **Mejor AUC 0,585 (época 10)**; el resto de épocas, entre 0,51 y 0,58.
+- Sensibilidad casi siempre 0 con umbral 0,5: la red predice "no pCR" para casi todas.
+- Pérdida de entrenamiento: de 0,603 a 0,524. La de validación sube desde la época 3 (de 0,60
+  a 0,65–0,81): empieza a memorizar el entrenamiento sin generalizar.
+- Referencia: 0,60 es la pérdida de predecir siempre la proporción de pCR (29 %). La red
+  empieza exactamente ahí y apenas aprende.
+- **Lectura:** cnn_v1 no encuentra señal útil (AUC ≈ azar). Con 219 pacientes, diferencias de
+  AUC de ±0,04 son ruido, así que el "mejor" 0,585 no es distinto de las demás épocas.
+
+### R2 · cnn_v1, pérdida ponderada (2026-10-07, PC Universidad)
+- Ejecución `20261007-213119_cnn_v1_completo_ponderada`. `pos_weight` = 2,40, mismas condiciones
+  que R1. Paró en la época 20.
+- **Mejor AUC 0,572 (época 10)**; el resto entre 0,52 y 0,57.
+- Sensibilidad entre 0,08 y 0,78 según la época, con especificidad moviéndose al revés.
+- Pérdida de entrenamiento: de 0,973 a 0,833 (0,98 es la de un predictor constante con esta
+  ponderación). La de validación sube desde la época 3 (de 0,97 a 1,09).
+
+### Comparación R1 vs R2 (lo que pide el enunciado)
+| | Normal (R1) | Ponderada (R2) |
+|---|---|---|
+| Mejor AUC | 0,585 | 0,572 |
+| Sensibilidad (umbral 0,5) | casi siempre 0 | 0,08–0,78, muy inestable |
+| Especificidad (umbral 0,5) | casi siempre 1 | 0,26–0,94 |
+
+- **Por qué:** con pérdida normal y 70 % de negativos, a la red le sale a cuenta dar
+  probabilidades bajas a todos, así que con umbral 0,5 nunca predice pCR (sensibilidad 0). La
+  ponderada multiplica por 2,40 el coste de fallar un positivo: las probabilidades suben y
+  ahora caen a ambos lados de 0,5, y la sensibilidad aparece.
+- Pero **el AUC no cambia**: la ponderación desplaza el punto de corte, no la capacidad de
+  ordenar a las pacientes. Si la red no distingue (AUC ≈ 0,55), ninguna pérdida lo arregla.
+- La inestabilidad de la sensibilidad entre épocas indica que las probabilidades se agrupan
+  cerca de 0,5: pequeños cambios de la red mueven a muchas pacientes de un lado a otro.
+- **Decisión:** cnn_v1 se descarta con ambas pérdidas (regla de 5–10 épocas sin mejora real).
 
 ---
 

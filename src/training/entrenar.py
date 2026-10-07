@@ -112,7 +112,8 @@ def predecir(modelo: nn.Module, cargador: DataLoader, dispositivo: torch.device,
 def entrenar_una_epoca(modelo, cargador, criterio, optimizador, dispositivo) -> float:
     modelo.train()
     perdida_total, n = 0.0, 0
-    for x, y in cargador:
+    total, inicio = len(cargador), time.perf_counter()
+    for i, (x, y) in enumerate(cargador, 1):
         x, y = x.to(dispositivo), y.to(dispositivo)
         optimizador.zero_grad()
         perdida = criterio(modelo(x).squeeze(1), y)
@@ -120,6 +121,11 @@ def entrenar_una_epoca(modelo, cargador, criterio, optimizador, dispositivo) -> 
         optimizador.step()
         perdida_total += perdida.item() * len(y)
         n += len(y)
+        if i % max(1, total // 20) == 0 or i == total:   # progreso dentro de la época
+            restante = (time.perf_counter() - inicio) / i * (total - i)
+            print(f"\r  entrenando lote {i}/{total} ({i / total:.0%}), quedan ~{restante:.0f} s ",
+                  end="", flush=True)
+    print("\r" + " " * 60 + "\r", end="", flush=True)
     return perdida_total / n
 
 
